@@ -1,0 +1,12 @@
+#!/bin/sh
+RCONFIG="/c/Progra~1/R/R-3.4.2/bin/i386/R CMD config"
+CXX11="`$RCONFIG CXX11`"
+CXX11STD="`$RCONFIG CXX11STD`"
+export LDFLAGS="-L/mingw32/lib"
+export CPPFLAGS="-I/mingw32/include"
+export CXX="$CXX11 $CXX11STD $CPPFLAGS"
+export CXXCPP="`$RCONFIG CXXCPP` $CPPFLAGS"
+export CXXFLAGS="`$RCONFIG CXXFLAGS`"
+export CC="`$RCONFIG CC` $CPPFLAGS"
+export CPP="`$RCONFIG CPP` $CPPFLAGS"
+export CFLAGS="`$RCONFIG CFLAGS`"

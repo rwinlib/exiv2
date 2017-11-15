@@ -1,0 +1,66 @@
+# Maintainer: Alexey Pavlov <alexpux@gmail.com>
+# Contributor: Ray Donnelly <mingw.android@gmail.com>
+
+_realname=exiv2
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=0.26
+pkgrel=2
+pkgdesc="Exif and Iptc metadata manipulation library and tools (mingw-w64)"
+arch=('any')
+url="http://exiv2.org"
+license=("GPL")
+makedepends=("${MINGW_PACKAGE_PREFIX}-gcc"
+             "${MINGW_PACKAGE_PREFIX}-pkg-config"
+             "${MINGW_PACKAGE_PREFIX}-libtool"
+             "${MINGW_PACKAGE_PREFIX}-cmake")
+depends=("${MINGW_PACKAGE_PREFIX}-expat"
+         "${MINGW_PACKAGE_PREFIX}-gettext"
+         "${MINGW_PACKAGE_PREFIX}-curl"
+         "${MINGW_PACKAGE_PREFIX}-libssh2"
+         "${MINGW_PACKAGE_PREFIX}-zlib")
+options=('strip' 'staticlibs')
+source=(${_realname}-${pkgver}.tar.gz::"https://github.com/Exiv2/${_realname}/archive/v${pkgver}.tar.gz"
+        0001-fix-tests.patch)
+sha256sums=('51cffa8d19d67e1da6c1d0f570a75b8f6c814113367318c2c0407691888c5f01'
+            'a87f79c66b4440a4822f5b0c68b0dbd091f1b1cb2a95e4371de708fb5bc57aa8')
+
+prepare() {
+  cd ${srcdir}/${_realname}-${pkgver}
+  patch -p1 -i ${srcdir}/0001-fix-tests.patch
+}
+
+build() {
+
+  [[ -d ${srcdir}/build-${MINGW_CHOST} ]] && rm -rf ${srcdir}/build-${MINGW_CHOST}
+  cp -rf ${srcdir}/${_realname}-${pkgver} ${srcdir}/build-${MINGW_CHOST}
+  cd ${srcdir}/build-${MINGW_CHOST}
+
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" \
+  ${MINGW_PREFIX}/bin/cmake.exe \
+    -G"MSYS Makefiles" \
+    -DCMAKE_INSTALL_PREFIX=${MINGW_PREFIX} \
+    -DBUILD_SHARED_LIBS=OFF \
+    -DEXIV2_ENABLE_SHARED=OFF \
+    -DEXIV2_ENABLE_VIDEO=ON \
+    -DEXIV2_ENABLE_NLS=OFF \
+    -DEXIV2_ENABLE_WIN_UNICODE=ON \
+    -DEXIV2_ENABLE_BUILD_SAMPLES=OFF \
+    -DEXIV2_ENABLE_CURL=OFF \
+    -DEXIV2_ENABLE_SSH=OFF \
+    ../${_realname}-${pkgver}
+
+  make VERBOSE=1
+}
+
+check() {
+
+  cd ${srcdir}/build-${MINGW_CHOST}
+
+  make tests
+}
+
+package() {
+  cd ${srcdir}/build-${MINGW_CHOST}
+  make DESTDIR="${pkgdir}" install
+}
